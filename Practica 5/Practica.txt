@@ -1,0 +1,71 @@
+USE [Ferreteria2.2]
+GO
+
+CREATE VIEW TodoLosQueTengan10 as
+SELECT * FROM PRODUCTOS
+WHERE cant_disp = 10
+
+
+CREATE VIEW ClientesFac as
+SELECT CLIENTES.nombre, CLIENTES.apellidoM, CLIENTES.apellidoP, CLIENTES.id_cliente AS 'Cliente', FACTURAS.fecha_factura FROM CLIENTES left join FACTURAS ON CLIENTES.id_cliente=FACTURAS.id_cliente
+
+
+CREATE VIEW FechaFacClientes as
+SELECT CLIENTES.nombre, CLIENTES.apellidoP, FACTURAS.fecha_factura, FACTURAS.folio FROM CLIENTES INNER JOIN FACTURAS ON CLIENTES.id_cliente=FACTURAS.id_cliente
+
+CREATE VIEW ProveedorDeProducto AS
+SELECT p.nombre AS 'Nombre del Producto' , p.cant_disp, p.precio, pr.nombre as 'Nombre del proveedor'   FROM PRODUCTOS p RIGHT JOIN PROVEEDOR as pr ON p.id_provedor=pr.id_provedor
+
+CREATE VIEW GananciaArribaDe100 as
+SELECT SUM(v.monto) as 'Ganancia', P.folio, P.fecha_hora FROM PAGO p INNER JOIN VENTAS v on p.id_pago=v.id_pago 
+GROUP BY p.folio, p.fecha_hora
+HAVING SUM(v.monto) > 100
+
+with MNV as (
+	SELECT SUM(v.monto) as 'Ganancia', P.folio, P.fecha_hora FROM PAGO p INNER JOIN VENTAS v on p.id_pago=v.id_pago 
+	GROUP BY p.folio, p.fecha_hora
+)
+SELECT * FROM MNV
+WHERE MNV.[Ganancia] > 100
+
+
+SELECT p.folio FROM  PAGO p WHERE p.folio= 2
+(SELECT SUM(v.monto) as 'Ganancia', P.folio, P.fecha_hora FROM PAGO p INNER JOIN VENTAS v on p.id_pago=v.id_pago 
+GROUP BY p.folio, p.fecha_hora)
+
+SELECT p.folio FROM  PAGO p WHERE p.folio= 2
+(SELECT MAX(V.monto) as 'Ganancia' FROM PAGO p INNER JOIN VENTAS v on p.id_pago=v.id_pago 
+GROUP BY p.folio, p.fecha_hora)
+
+SELECT  NOMBRE, PRECIO FROM  PRODUCTOS WHERE nombre =
+(SELECT nombre FROM PRODUCTOS WHERE nombre = 'Mazo') 
+
+
+SELECT nombre, precio FROM PRODUCTOS WHERE precio > (SELECT AVG(precio) FROM PRODUCTOS)
+
+SELECT * INTO #PRODUCTOS FROM PRODUCTOS
+SELECT * FROM #PRODUCTOS
+DELETE  FROM #PRODUCTOS WHERE cant_disp = 50
+
+
+
+/*VISTA NUMERO 1, Simplemente la union de dos tablas*/
+SELECT DISTINCT dbo.CLIENTES.id_cliente, dbo.CLIENTES.nombre, dbo.FACTURAS.folio, dbo.FACTURAS.fecha_factura AS FECHA, dbo.CLIENTES.apellidoP AS [APELLIDO PATERNO], dbo.CLIENTES.telefono
+FROM            dbo.FACTURAS INNER JOIN
+                         dbo.CLIENTES ON dbo.FACTURAS.id_cliente = dbo.CLIENTES.id_cliente
+
+
+
+/*VISTA NUEMERO 2, Union y filtro de 3 tablas*/
+SELECT        dbo.PRODUCTOS.id_producto, dbo.ENTRADAS.cantidad, dbo.PRODUCTOS.nombre, dbo.PRODUCTOS.precio, dbo.PROVEEDOR.id_provedor, dbo.PROVEEDOR.nombre AS Expr1, dbo.PROVEEDOR.direccion, 
+                         dbo.PROVEEDOR.telefono
+FROM            dbo.ENTRADAS INNER JOIN
+                         dbo.PRODUCTOS ON dbo.ENTRADAS.id_producto = dbo.PRODUCTOS.id_producto INNER JOIN
+                         dbo.PROVEEDOR ON dbo.ENTRADAS.id_provedor = dbo.PROVEEDOR.id_provedor
+
+
+/*VISTA NUMERO 3, suma de aquellos registros con el mismo id de pago en 2 tablas diferentes*/
+SELECT        SUM(dbo.VENTAS.monto) AS Ganancia, dbo.PAGO.id_pago
+FROM            dbo.PAGO INNER JOIN
+                         dbo.VENTAS ON dbo.PAGO.id_pago = dbo.VENTAS.id_pago
+GROUP BY dbo.PAGO.id_pago
